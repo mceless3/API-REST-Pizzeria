@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pizzería MPC — API REST</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rojo:    #C0392B;
+      --rojo2:   #E74C3C;
+      --naranja: #FF8C42;
+      --dorado:  #F39C12;
+      --crema:   #FDF6EC;
+      --oscuro:  #1A1A1A;
+      --gris:    #ECF0F1;
+      --queso:   #F1C40F;
+      --vegetal: #27AE60;
+      --carne:   #C0392B;
+      --salsa:   #E67E22;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: var(--crema);
+      color: var(--oscuro);
+      min-height: 100vh;
+    }
+    h1, h2, h3, .title { font-family: 'Poppins', sans-serif; font-weight: 700; }
+
+    /* Header con gradiente y patrón */
+    header {
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.10) 1px, transparent 1.5px),
+        radial-gradient(circle at 70% 70%, rgba(255,255,255,0.08) 1px, transparent 1.5px),
+        linear-gradient(135deg, #C0392B 0%, #E74C3C 50%, #FF8C42 100%);
+      background-size: 30px 30px, 50px 50px, 100% 100%;
+      color: #fff;
+      padding: 1.6rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 20px rgba(192, 57, 43, 0.3);
+    }
+    header .logo {
+      font-size: 2.6rem;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    header h1 { font-size: 1.8rem; letter-spacing: 0.5px; }
+    header .subtitle { font-size: 0.85rem; opacity: 0.9; font-weight: 400; }
+
+    /* Nav */
+    nav {
+      background: var(--oscuro);
+      display: flex;
+    }
+    nav button {
+      flex: 1;
+      padding: 0.9rem;
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      letter-spacing: 0.3px;
+    }
+    nav button.active, nav button:hover {
+      background: linear-gradient(180deg, var(--rojo) 0%, var(--rojo2) 100%);
+      color: #fff;
+    }
+
+    main { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #fff 0%, #fff8ee 100%);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--dorado);
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-icon { font-size: 2.2rem; }
+    .stat-num  { font-size: 1.9rem; font-weight: 800; font-family: 'Poppins'; color: var(--rojo); line-height: 1; }
+    .stat-lbl  { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 0.2rem; }
+
+    .section { display: none; animation: fadeIn 0.3s; }
+    .section.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--rojo);
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--dorado);
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeIn 0.4s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(192, 57, 43, 0.18);
+    }
+    .card h3 { color: var(--rojo); margin-bottom: 0.4rem; font-size: 1.15rem; }
+    .card .badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      background: var(--gris);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .badge-queso   { background: #FEF3C7; color: #92400E; }
+    .badge-vegetal { background: #D1FAE5; color: #065F46; }
+    .badge-carne   { background: #FEE2E2; color: #991B1B; }
+    .badge-salsa   { background: #FED7AA; color: #9A3412; }
+
+    .card .precio {
+      display: inline-block;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, var(--dorado) 0%, var(--naranja) 100%);
+      padding: 0.3rem 0.85rem;
+      border-radius: 8px;
+      margin: 0.3rem 0;
+      box-shadow: 0 2px 8px rgba(243, 156, 18, 0.35);
+      font-family: 'Poppins';
+    }
+    .card .actions { margin-top: 0.8rem; display: flex; gap: 0.5rem; }
+    .card-meta { font-size: 0.85rem; color: #666; margin: 0.4rem 0; }
+
+    /* Borde de color por tipo de ingrediente */
+    .card.tipo-queso   { border-left-color: var(--queso); }
+    .card.tipo-vegetal { border-left-color: var(--vegetal); }
+    .card.tipo-carne   { border-left-color: var(--carne); }
+    .card.tipo-salsa   { border-left-color: var(--salsa); }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #888;
+      grid-column: 1 / -1;
+    }
+    .empty-icon {
+      font-size: 4.5rem;
+      margin-bottom: 0.8rem;
+      opacity: 0.55;
+      animation: float 2.5s ease-in-out infinite;
+    }
+    .empty p { font-size: 0.95rem; margin: 0.2rem 0; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+
+    /* Form */
+    .form-box {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.4rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      margin-bottom: 1.5rem;
+    }
+    .form-box h3 { margin-bottom: 1rem; color: var(--oscuro); font-size: 1.15rem; }
+    .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+    .form-row label {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 140px;
+      font-size: 0.82rem;
+      gap: 0.3rem;
+      color: #555;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      padding: 0.6rem 0.7rem;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      background: #fafafa;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--rojo2);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.12);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    /* Color sutil del select de tipo de ingrediente */
+    #i-tipo.tipo-queso   { background: #FEF9E7; border-color: #F1C40F; color: #92400E; }
+    #i-tipo.tipo-vegetal { background: #E8F8F0; border-color: #27AE60; color: #065F46; }
+    #i-tipo.tipo-carne   { background: #FDEDEC; border-color: #C0392B; color: #991B1B; }
+    #i-tipo.tipo-salsa   { background: #FDF2E9; border-color: #E67E22; color: #9A3412; }
+
+    button.btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: transform 0.15s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+    button.btn:hover { transform: translateY(-2px); }
+    button.btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rojo) 0%, var(--rojo2) 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(192, 57, 43, 0.32);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(192, 57, 43, 0.45); }
+    .btn-warning {
+      background: linear-gradient(135deg, var(--dorado) 0%, var(--naranja) 100%);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(243, 156, 18, 0.32);
+      font-size: 0.82rem;
+      padding: 0.4rem 0.85rem;
+    }
+    .btn-warning:hover { box-shadow: 0 5px 14px rgba(243, 156, 18, 0.45); }
+    .btn-danger  {
+      background: #f5f5f5;
+      color: #555;
+      font-size: 0.82rem;
+      padding: 0.4rem 0.85rem;
+      border: 1px solid #ddd;
+    }
+    .btn-danger:hover { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+
+    /* Mensaje */
+    #msg {
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      display: none;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    #msg.ok    { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; display: block; }
+    #msg.error { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; display: block; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.4rem; }
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo">🍕</span>
+  <div>
+    <h1>Pizzería MPC</h1>
+    <div class="subtitle">API REST · Gestión de pizzas e ingredientes</div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('pizzas', this)">Pizzas</button>
+  <button onclick="showTab('ingredientes', this)">Ingredientes</button>
+</nav>
+
+<main>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div>
+        <div class="stat-num" id="stat-pizzas">0</div>
+        <div class="stat-lbl">Pizzas registradas</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div>
+        <div class="stat-num" id="stat-ing">0</div>
+        <div class="stat-lbl">Ingredientes registrados</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="msg"></div>
+
+  <!-- ═══════════ PIZZAS ═══════════ -->
+  <section id="pizzas" class="section active">
+    <h2>Gestión de Pizzas</h2>
+
+    <div class="form-box">
+      <h3 id="pizza-form-title">Agregar Pizza</h3>
+      <input type="hidden" id="pizza-id" />
+      <div class="form-row">
+        <label>Nombre <input id="p-nombre" placeholder="Ej: Margarita" /></label>
+        <label>Tamaño
+          <select id="p-tamaño">
+            <option value="">— Selecciona —</option>
+            <option value="chica">Chica</option>
+            <option value="mediana">Mediana</option>
+            <option value="grande">Grande</option>
+          </select>
+        </label>
+        <label>Precio ($) <input id="p-precio" type="number" min="1" step="0.5" placeholder="99.00" /></label>
+      </div>
+      <div class="form-row">
+        <label style="flex:1 1 100%">Descripción <textarea id="p-desc" placeholder="Ingredientes destacados..."></textarea></label>
+      </div>
+      <button class="btn btn-primary" onclick="savePizza()">Guardar</button>
+      <button class="btn btn-danger" style="margin-left:.5rem" onclick="resetPizzaForm()">Cancelar</button>
+    </div>
+
+    <div class="card-grid" id="pizza-list"></div>
+  </section>
+
+  <!-- ═══════════ INGREDIENTES ═══════════ -->
+  <section id="ingredientes" class="section">
+    <h2>Gestión de Ingredientes</h2>
+
+    <div class="form-box">
+      <h3 id="ing-form-title">Agregar Ingrediente</h3>
+      <input type="hidden" id="ing-id" />
+      <div class="form-row">
+        <label>Nombre <input id="i-nombre" placeholder="Ej: Mozzarella" /></label>
+        <label>Tipo
+          <select id="i-tipo">
+            <option value="">— Selecciona —</option>
+            <option value="queso">Queso</option>
+            <option value="vegetal">Vegetal</option>
+            <option value="carne">Carne</option>
+            <option value="salsa">Salsa</option>
+          </select>
+        </label>
+        <label>Pizza
+          <select id="i-pizza"></select>
+        </label>
+      </div>
+      <button class="btn btn-primary" onclick="saveIngrediente()">Guardar</button>
+      <button class="btn btn-danger" style="margin-left:.5rem" onclick="resetIngForm()">Cancelar</button>
+    </div>
+
+    <div class="card-grid" id="ing-list"></div>
+  </section>
+</main>
+
+<script>
+const API = "";
+
+function showTab(name, btn) {
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.getElementById(name).classList.add("active");
+  btn.classList.add("active");
+  if (name === "pizzas") loadPizzas();
+  if (name === "ingredientes") { loadPizzas(); loadIngredientes(); }
+}
+
+function showMsg(text, type="ok") {
+  const m = document.getElementById("msg");
+  m.textContent = text;
+  m.className = type;
+  setTimeout(() => m.className = "", 3000);
+}
+
+// ─── PIZZAS ───
+async function loadPizzas() {
+  const res  = await fetch(`${API}/pizzas`);
+  const data = await res.json();
+  const list = document.getElementById("pizza-list");
+  document.getElementById("stat-pizzas").textContent = data.length;
+  if (!data.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <p><strong>¡Aún no tienes pizzas!</strong></p>
+      </div>`;
+  } else {
+    list.innerHTML = "";
+    data.forEach(p => {
+      list.innerHTML += `
+        <div class="card">
+          <h3>${p.nombre}</h3>
+          <span class="badge">${p.tamaño}</span>
+          <div class="precio">$${p.precio.toFixed(2)}</div>
+          <p class="card-meta">${p.descripcion||"—"}</p>
+          <div class="actions">
+            <button class="btn btn-warning" onclick="editPizza(${p.id})">Editar</button>
+            <button class="btn btn-danger"  onclick="deletePizza(${p.id})">Eliminar</button>
+          </div>
+        </div>`;
+    });
+  }
+  // Actualizar select de ingredientes
+  const sel = document.getElementById("i-pizza");
+  if (sel) {
+    sel.innerHTML = data.map(p => `<option value="${p.id}">${p.id} — ${p.nombre}</option>`).join("");
+  }
+}
+
+async function savePizza() {
+  const id     = document.getElementById("pizza-id").value;
+  const nombre = document.getElementById("p-nombre").value.trim();
+  const tamaño = document.getElementById("p-tamaño").value;
+  const precio = parseFloat(document.getElementById("p-precio").value);
+  const desc   = document.getElementById("p-desc").value.trim();
+  if (!nombre)  return showMsg("El nombre es obligatorio.", "error");
+  if (!tamaño)  return showMsg("Selecciona un tamaño.", "error");
+  if (!precio || isNaN(precio) || precio <= 0) {
+    return showMsg("El precio debe ser un número positivo.", "error");
+  }
+
+  const method = id ? "PUT" : "POST";
+  const url    = id ? `/pizzas/${id}` : `/pizzas`;
+  const res  = await fetch(url, { method, headers: {"Content-Type":"application/json"}, body: JSON.stringify({nombre, tamaño, precio, descripcion: desc}) });
+  const data = await res.json();
+  if (res.ok) { showMsg(data.mensaje); resetPizzaForm(); loadPizzas(); loadIngredientes(); }
+  else showMsg(data.error, "error");
+}
+
+async function editPizza(id) {
+  const res  = await fetch(`/pizzas/${id}`);
+  const data = await res.json();
+  document.getElementById("pizza-id").value   = data.id;
+  document.getElementById("p-nombre").value   = data.nombre;
+  document.getElementById("p-tamaño").value   = data.tamaño;
+  document.getElementById("p-precio").value   = data.precio;
+  document.getElementById("p-desc").value     = data.descripcion || "";
+  document.getElementById("pizza-form-title").textContent = "Editar Pizza";
+  document.getElementById("pizzas").scrollIntoView({behavior:"smooth"});
+}
+
+async function deletePizza(id) {
+  if (!confirm("¿Eliminar esta pizza?")) return;
+  const res  = await fetch(`/pizzas/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  if (res.ok) { showMsg(data.mensaje); loadPizzas(); loadIngredientes(); }
+  else showMsg(data.error, "error");
+}
+
+function resetPizzaForm() {
+  ["pizza-id","p-nombre","p-precio","p-desc"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("p-tamaño").value = "";
+  document.getElementById("pizza-form-title").textContent = "Agregar Pizza";
+}
+
+// ─── INGREDIENTES ───
+async function loadIngredientes() {
+  const [resI, resP] = await Promise.all([
+    fetch(`${API}/ingredientes`),
+    fetch(`${API}/pizzas`)
+  ]);
+  const data    = await resI.json();
+  const pizzas  = await resP.json();
+  const pizzaName = Object.fromEntries(pizzas.map(p => [p.id, p.nombre]));
+  document.getElementById("stat-ing").textContent = data.length;
+  const list = document.getElementById("ing-list");
+  if (!data.length) {
+    list.innerHTML = `
+      <div class="empty">
+        <p><strong>¡Aún no tienes ingredientes!</strong></p>
+      </div>`;
+    return;
+  }
+  list.innerHTML = "";
+  data.forEach(i => {
+    const nombrePizza = pizzaName[i.pizza_id] || `ID ${i.pizza_id}`;
+    list.innerHTML += `
+      <div class="card tipo-${i.tipo}">
+        <h3>${i.nombre}</h3>
+        <span class="badge badge-${i.tipo}">${i.tipo}</span>
+        <p class="card-meta">Pizza: <strong>${nombrePizza}</strong></p>
+        <div class="actions">
+          <button class="btn btn-warning" onclick="editIngrediente(${i.id})">Editar</button>
+          <button class="btn btn-danger"  onclick="deleteIngrediente(${i.id})">Eliminar</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function saveIngrediente() {
+  const id      = document.getElementById("ing-id").value;
+  const nombre  = document.getElementById("i-nombre").value.trim();
+  const tipo    = document.getElementById("i-tipo").value;
+  const pizza_id = parseInt(document.getElementById("i-pizza").value);
+  if (!nombre) return showMsg("El nombre es obligatorio.", "error");
+  if (!tipo)   return showMsg("Selecciona un tipo.", "error");
+  if (!pizza_id || isNaN(pizza_id)) {
+    return showMsg("Primero registra una pizza para asociar el ingrediente.", "error");
+  }
+
+  const method = id ? "PUT" : "POST";
+  const url    = id ? `/ingredientes/${id}` : `/ingredientes`;
+  const res  = await fetch(url, { method, headers: {"Content-Type":"application/json"}, body: JSON.stringify({nombre, tipo, pizza_id}) });
+  const data = await res.json();
+  if (res.ok) { showMsg(data.mensaje); resetIngForm(); loadIngredientes(); }
+  else showMsg(data.error, "error");
+}
+
+async function editIngrediente(id) {
+  const res  = await fetch(`/ingredientes/${id}`);
+  const data = await res.json();
+  document.getElementById("ing-id").value    = data.id;
+  document.getElementById("i-nombre").value  = data.nombre;
+  document.getElementById("i-tipo").value    = data.tipo;
+  applyTipoColor();
+  document.getElementById("i-pizza").value   = data.pizza_id;
+  document.getElementById("ing-form-title").textContent = "Editar Ingrediente";
+}
+
+async function deleteIngrediente(id) {
+  if (!confirm("¿Eliminar este ingrediente?")) return;
+  const res  = await fetch(`/ingredientes/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  if (res.ok) { showMsg(data.mensaje); loadIngredientes(); }
+  else showMsg(data.error, "error");
+}
+
+function resetIngForm() {
+  ["ing-id","i-nombre"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("i-tipo").value = "";
+  applyTipoColor();
+  const sel = document.getElementById("i-pizza");
+  if (sel.options.length > 0) sel.selectedIndex = 0;
+  document.getElementById("ing-form-title").textContent = "Agregar Ingrediente";
+}
+
+function applyTipoColor() {
+  const sel = document.getElementById("i-tipo");
+  sel.classList.remove("tipo-queso","tipo-vegetal","tipo-carne","tipo-salsa");
+  if (sel.value) sel.classList.add("tipo-" + sel.value);
+}
+document.getElementById("i-tipo").addEventListener("change", applyTipoColor);
+
+// Init
+loadPizzas();
+loadIngredientes();
+</script>
+</body>
+</html>
